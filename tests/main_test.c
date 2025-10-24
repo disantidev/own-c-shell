@@ -24,8 +24,6 @@ void test_shell(void) {
 
     message(buffer, buffer_size);
 
-    printf("Read from stdin: %s", buffer);
-
     CU_ASSERT_STRING_EQUAL(buffer, "Hello, World!\n");
 
     stdin = original_stdin;
