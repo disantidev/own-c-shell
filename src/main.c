@@ -4,7 +4,7 @@
 
 #define INPUT_LINE_SIZE 256
 
-int main(int argc, char *argv[]) {
+int shell (int argc, char *argv[]) {
     char* input_line = NULL;
     
     if ((input_line = (char*)malloc(INPUT_LINE_SIZE * sizeof(char))) == NULL) {
@@ -30,4 +30,8 @@ int main(int argc, char *argv[]) {
     free(input_line);
 
     return EXIT_SUCCESS;
+}
+
+int main(int argc, char *argv[]) {
+    return shell(argc, &argv);
 }
