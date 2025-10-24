@@ -56,3 +56,6 @@ dkms.conf
 
 # VS Code settings
 .vscode/
+
+# Build files
+build/
