@@ -5,7 +5,7 @@ My own shell for learning purposes. I am looking for practice C and clarifying q
 ## Objectives
 
 ### Basic
-- [ ] Main loop with EOF detection
+- [X] Main loop with EOF detection
 - [ ] User input reading with long line support
 - [ ] Command parsing with quote and escape handling
 - [ ] External command execution via PATH
