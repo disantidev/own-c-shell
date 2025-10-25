@@ -6,15 +6,16 @@ SRC_DIR = src
 BUILD_DIR = build
 TEST_DIR = tests
 
-APP_SRCS = $(SRC_DIR)/main.c
+APP_SRCS = $(SRC_DIR)/main.c $(SRC_DIR)/shell.c
 APP_OBJS = $(addprefix $(BUILD_DIR)/,$(notdir $(APP_SRCS:.c=.o)))
 APP_EXEC = $(BUILD_DIR)/main
 
-TEST_SRCS = $(TEST_DIR)/main_test.c
+TEST_SRCS = $(TEST_DIR)/main_test.c $(SRC_DIR)/shell.c
 TEST_OBJS = $(addprefix $(BUILD_DIR)/,$(notdir $(TEST_SRCS:.c=.o)))
 TEST_EXEC = $(BUILD_DIR)/main_test
 
-all: $(APP_EXEC)
+run: $(APP_EXEC)
+	./$(APP_EXEC)
 
 $(APP_EXEC): $(APP_OBJS)
 	$(CC) $(APP_OBJS) -o $@ $(LDFLAGS)
