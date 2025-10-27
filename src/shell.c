@@ -2,30 +2,33 @@
 #include <stdlib.h>
 #include <string.h>
 
-int shell(char *buffer, int size)
+int shell()
 {
-    if (buffer == NULL)
-    {
-        fprintf(stderr, "Error: Unable to allocate memory for input line.\n");
-        return EXIT_FAILURE;
-    }
+    char *buffer = NULL;
+    size_t buffer_size = 0;
 
     printf("Welcome to My Own Shell!\n\n");
+    printf("shell> ");
 
-    while (1)
+    while (getline(&buffer, &buffer_size, stdin) != -1)
     {
-        printf("shell> ");
-
-        if (fgets(buffer, size, stdin) == NULL)
+        if (strlen(buffer) > 0 && buffer[strlen(buffer) - 1] == '\n')
         {
-            printf("\n");
-            break;
+            buffer[strlen(buffer) - 1] = '\0';
         }
 
-        buffer[strlen(buffer) - 1] = '\0';
+        if (strcmp(buffer, "exit") == 0)
+        {
+            printf("Exiting shell. Goodbye!\n");
+            free(buffer);
+            return EXIT_SUCCESS;
+        }
 
         printf("You entered: %s\n", buffer);
+        printf("shell> ");
     }
 
-    return EXIT_SUCCESS;
+    free(buffer);
+
+    return EXIT_FAILURE;
 }

@@ -15,7 +15,7 @@ A comprehensive shell implementation project for mastering C systems programming
 **Core Concepts**: Input handling, basic parsing, process basics
 
 - [X] Main loop with EOF detection
-- [ ] **User input reading with long line support**
+- [X] **User input reading with long line support**
   - *Learn*: Dynamic memory allocation, buffer management
   - *Key concepts*: `realloc()`, buffer overflow prevention
   - *Resources*: [GNU getline documentation](https://www.gnu.org/software/libc/manual/html_node/Line-Input.html)

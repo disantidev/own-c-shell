@@ -1,1 +1,1 @@
-int shell(char* buffer, int size);
+int shell();
