@@ -1,14 +1,7 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include "shell.h"
+#include "mosh.h"
 
-int main(int argc, char *argv[])
-{
-    if (shell() == EXIT_FAILURE)
-    {
-        perror("shell");
-        return EXIT_FAILURE;
-    }
-
-    return EXIT_SUCCESS;
+int main(int argc, char *argv[]) {
+  loop();
+  return EXIT_SUCCESS;
 }

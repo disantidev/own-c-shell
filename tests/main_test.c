@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
-#include "../src/shell.h"
+#include "../src/mosh.h"
 
 static int stdout_backup;
 

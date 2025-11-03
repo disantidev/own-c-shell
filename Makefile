@@ -6,11 +6,11 @@ SRC_DIR = src
 BUILD_DIR = build
 TEST_DIR = tests
 
-APP_SRCS = $(SRC_DIR)/main.c $(SRC_DIR)/shell.c
+APP_SRCS = $(SRC_DIR)/main.c $(SRC_DIR)/mosh.c $(SRC_DIR)/executor.c $(SRC_DIR)/parser.c $(SRC_DIR)/utils.c
 APP_OBJS = $(addprefix $(BUILD_DIR)/,$(notdir $(APP_SRCS:.c=.o)))
 APP_EXEC = $(BUILD_DIR)/main
 
-TEST_SRCS = $(TEST_DIR)/main_test.c $(SRC_DIR)/shell.c
+TEST_SRCS = $(TEST_DIR)/main_test.c $(SRC_DIR)/mosh.c $(SRC_DIR)/executor.c $(SRC_DIR)/parser.c $(SRC_DIR)/utils.c
 TEST_OBJS = $(addprefix $(BUILD_DIR)/,$(notdir $(TEST_SRCS:.c=.o)))
 TEST_EXEC = $(BUILD_DIR)/main_test
 

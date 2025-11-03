@@ -220,7 +220,7 @@ time valgrind --tool=massif ./build/main < large_script.sh
 ```
 src/
 ├── main.c              # Entry point
-├── shell.c/.h          # Main shell loop
+├── mosh.c/.h          # Main shell loop
 ├── parser.c/.h         # Command parsing
 ├── executor.c/.h       # Command execution  
 ├── builtins.c/.h       # Built-in commands
