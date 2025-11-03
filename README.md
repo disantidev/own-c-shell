@@ -19,7 +19,7 @@ A comprehensive shell implementation project for mastering C systems programming
   - *Learn*: Dynamic memory allocation, buffer management
   - *Key concepts*: `realloc()`, buffer overflow prevention
   - *Resources*: [GNU getline documentation](https://www.gnu.org/software/libc/manual/html_node/Line-Input.html)
-- [ ] **Command parsing with quote and escape handling** 
+- [X] **Command parsing with quote and escape handling** 
   - *Learn*: State machines, lexical analysis
   - *Key concepts*: Tokenization, escape sequences, quote handling
   - *Challenge*: Handle nested quotes: `echo "He said 'hello'"`
