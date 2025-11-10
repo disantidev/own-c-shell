@@ -23,11 +23,11 @@ A comprehensive shell implementation project for mastering C systems programming
   - *Learn*: State machines, lexical analysis
   - *Key concepts*: Tokenization, escape sequences, quote handling
   - *Challenge*: Handle nested quotes: `echo "He said 'hello'"`
-- [ ] **External command execution via PATH**
+- [X] **External command execution via PATH**
   - *Learn*: `fork()`, `exec()` family, `waitpid()`
   - *Key concepts*: Process creation, program loading
   - *Debug tip*: Use `strace` to trace system calls
-- [ ] **Error handling with descriptive messages**
+- [X] **Error handling with descriptive messages**
   - *Learn*: `errno`, `perror()`, custom error reporting
   - *Key concepts*: Error propagation, user-friendly messages
 
