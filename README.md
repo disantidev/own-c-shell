@@ -34,7 +34,7 @@ A comprehensive shell implementation project for mastering C systems programming
 ### 🟡 Intermediate (Process Management - Est. 3-4 weeks)
 **Core Concepts**: Built-ins, persistence, environment management
 
-- [ ] **Built-in commands (exit, ls, cd, echo, pwd)**
+- [X] **Built-in commands (exit, ls, cd, echo, pwd)**
   - *Learn*: Function pointers, command dispatch tables
   - *Key concepts*: `chdir()`, `getcwd()`, built-in vs external
   - *Architecture*: Design extensible command system

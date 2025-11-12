@@ -2,23 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "builtins.h"
 
-int execute_args (char **args) {
+int execute_process (char **args) {
   pid_t pid, wpid;
   int status;
-
-  if (strcmp(args[0], "exit") == 0) {
-    printf("Exiting... Bye!\n");
-    exit(EXIT_SUCCESS);
-  }
-
-  if (strcmp(args[0], "help") == 0) {
-    printf("My Own SHell - MOSH\n\n");
-    printf("Commands: \n");
-    printf("exit - Exit from shell interpreter\n");
-    printf("help - Show shell interpreter available commands\n");
-    return 1;
-  }
 
   pid = fork();
 
@@ -37,4 +25,14 @@ int execute_args (char **args) {
   }
 
   return 1;
+}
+
+int execute_args (char **args) {
+  int builtin_r = execute_builtin(args);
+
+  if (builtin_r != -1) {
+    return builtin_r;
+  }
+
+  return execute_process(args);
 }
