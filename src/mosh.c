@@ -16,9 +16,8 @@ void loop (void) {
     line = read_line();
     args = parse_line(line);
     status = execute_args(args);
+    free_parsed_args(args);
+    free(line);
   } while (status);
-
-  free(args);
-  free(line);
 }
 

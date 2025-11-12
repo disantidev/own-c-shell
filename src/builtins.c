@@ -8,13 +8,15 @@ int mosh_exit(char **);
 int mosh_cd(char **);
 int mosh_pwd(char **);
 int mosh_echo(char **);
+int mosh_ls(char **);
 
 char *builtin_str[] = {
     "help",
     "exit",
     "cd",
     "pwd",
-    "echo"
+    "echo",
+    "ls"
 };
 
 int (*builtin_func[]) (char **) = {
@@ -23,6 +25,7 @@ int (*builtin_func[]) (char **) = {
     &mosh_cd,
     &mosh_pwd,
     &mosh_echo,
+    &mosh_ls
 };
 
 int get_builtin_size () {
@@ -49,17 +52,27 @@ int mosh_help (char **args) {
     printf("Commands: \n");
     printf("exit - Exit from shell interpreter\n");
     printf("help - Show shell interpreter available commands\n");
+    printf("cd - Change directory\n");
+    printf("pwd - Print working directory\n");
+    printf("echo - Display a line of text\n");
+    printf("ls - List directory contents\n");
     return 1;
 }
 
 int mosh_cd (char **args) {
     char buf[1024];
-    char *cwd;
+    char cwd[1014];
 
-    cwd = getcwd(buf, sizeof(buf));
-
-    strcat(cwd, "/");
-    strcat(cwd, args[1]);
+    if (args[1] == NULL || strcmp(args[1], "~") == 0) {
+        strcpy(cwd, "/Users/");
+        strcat(cwd, getlogin());
+    } else if (args[1][0] != '/') {
+        strcpy(cwd, getcwd(buf, sizeof(buf)));
+        strcat(cwd, "/");
+        strcat(cwd, args[1]);
+    } else {
+        strcpy(cwd, args[1]);
+    }
 
     if (chdir(cwd) != 0)
         perror("cd");
@@ -74,6 +87,19 @@ int mosh_pwd (char **args) {
 }
 
 int mosh_echo (char **args) {
-    puts(args[1]);
+    int len = 1;
+
+    while (args[len] != NULL) {
+        printf("%s", args[len]);
+        if (args[len+1] != NULL) printf(" ");
+        else printf("\n");
+        len++;
+    }
+
+    return 1;
+}
+
+int mosh_ls (char **args) {
+    // TODO: Implement ls command
     return 1;
 }

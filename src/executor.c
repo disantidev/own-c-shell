@@ -28,6 +28,8 @@ int execute_process (char **args) {
 }
 
 int execute_args (char **args) {
+  if (args[0] == NULL) return 1;
+
   int builtin_r = execute_builtin(args);
 
   if (builtin_r != -1) {
