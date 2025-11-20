@@ -1,1 +1,1 @@
-char *read_line (void);
+char *read_line(void);

@@ -1,1 +1,1 @@
-void loop (void);
+int loop(void);

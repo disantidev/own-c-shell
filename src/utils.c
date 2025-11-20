@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "history.h"
 
-#define SHELL_NAME "mosh"
-
-char *read_line (void) {
+char *read_line(void)
+{
   char *line = NULL;
   size_t bufsize = 0;
 
@@ -12,13 +12,17 @@ char *read_line (void) {
   char *cwd;
 
   cwd = getcwd(buf, sizeof(buf));
-  
+
   printf("%s> ", cwd);
 
-  if (getline(&line, &bufsize, stdin) == -1) {
-    if (feof(stdin)) {
+  if (getline(&line, &bufsize, stdin) == -1)
+  {
+    if (feof(stdin))
+    {
       exit(EXIT_SUCCESS);
-    } else {
+    }
+    else
+    {
       perror("read_line");
       exit(EXIT_FAILURE);
     }
@@ -26,4 +30,3 @@ char *read_line (void) {
 
   return line;
 }
-

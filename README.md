@@ -38,9 +38,9 @@ A comprehensive shell implementation project for mastering C systems programming
   - *Learn*: Function pointers, command dispatch tables
   - *Key concepts*: `chdir()`, `getcwd()`, built-in vs external
   - *Architecture*: Design extensible command system
-- [ ] **Command history with file persistence**
+- [X] **Command history with file persistence**
   - *Learn*: File I/O, data serialization, circular buffers
-  - *Key concepts*: `~/.shell_history`, efficient storage
+  - *Key concepts*: `~/.mosh_history`, efficient storage
   - *Challenge*: Implement history search and expansion
 - [ ] **Environment variables management (local/global)**
   - *Learn*: `environ`, `getenv()`, `setenv()`, variable scope

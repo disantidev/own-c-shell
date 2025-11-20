@@ -1,13 +1,16 @@
 #include <stdlib.h>
-#include <CUnit/Basic.h>
+#include <assert.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
+#include <stdio.h>
 #include "../src/mosh.h"
+#include "../src/history.h"
 
 static int stdout_backup;
 
-void suppress_stdout() {
+void suppress_stdout()
+{
     fflush(stdout);
     stdout_backup = dup(STDOUT_FILENO);
     FILE *stdout_fp = fopen("stdout.txt", "a");
@@ -17,7 +20,8 @@ void suppress_stdout() {
     fclose(stdout_fp);
 }
 
-void resume_stdout(char **output) {
+void resume_stdout(char **output)
+{
     fflush(stdout);
     dup2(stdout_backup, STDOUT_FILENO);
     close(stdout_backup);
@@ -32,7 +36,8 @@ void resume_stdout(char **output) {
     remove("stdout.txt");
 }
 
-int execute_with_output(int (*method)(void), char **output) {
+int execute_with_output(int (*method)(void), char **output)
+{
     suppress_stdout();
     int result = method();
     resume_stdout(output);
@@ -50,20 +55,21 @@ void mock_input(char *value)
 
 void test_shell_long_input(void)
 {
-    mock_input("Lorem Ipsum is simply dummy text of the printing and typesetting industry. \
+    mock_input("echo \"Lorem Ipsum is simply dummy text of the printing and typesetting industry. \
     Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an \
     unknown printer took a galley of type and scrambled it to make a type specimen book. \
     It has survived not only five centuries, but also the leap into electronic typesetting, \
-    remaining essentially unchanged\nexit\n");
-    
+    remaining essentially unchanged\"\nexit\n");
+
     char *output = NULL;
 
-    int result = execute_with_output(shell, &output);
+    int result = execute_with_output(loop, &output);
 
-    CU_ASSERT_EQUAL(result, EXIT_SUCCESS);
-    CU_ASSERT_TRUE(strstr(output, "You entered: Lorem Ipsum is simply dummy text") != NULL);
+    assert(result == EXIT_SUCCESS);
+    assert(strstr(output, "Lorem Ipsum is simply dummy text") != NULL);
 
     free(output);
+    printf("✓ test_shell_long_input passed\n");
 }
 
 void test_shell_exit(void)
@@ -71,23 +77,71 @@ void test_shell_exit(void)
     mock_input("exit\n");
 
     char *output = NULL;
-    
-    int result = execute_with_output(shell, &output);
 
-    CU_ASSERT_EQUAL(result, EXIT_SUCCESS);
-    CU_ASSERT_TRUE(strstr(output, "Exiting shell. Goodbye!") != NULL);
+    int result = execute_with_output(loop, &output);
+
+    assert(result == EXIT_SUCCESS);
+    assert(strstr(output, "Exiting... Bye!") != NULL);
 
     free(output);
+    printf("✓ test_shell_exit passed\n");
+}
+
+void test_history_print_empty(void)
+{
+    mock_input("history\nexit\n");
+
+    char *output = NULL;
+    int result = execute_with_output(loop, &output);
+
+    assert(result == EXIT_SUCCESS);
+    assert(output != NULL);
+
+    free(output);
+    printf("✓ test_history_print_empty passed\n");
+}
+
+void test_history_add_and_print(void)
+{
+    mock_input("echo test1\necho test2\nhistory\nexit\n");
+
+    char *output = NULL;
+    int result = execute_with_output(loop, &output);
+
+    assert(result == EXIT_SUCCESS);
+    assert(strstr(output, "echo test1") != NULL);
+    assert(strstr(output, "echo test2") != NULL);
+
+    free(output);
+    printf("✓ test_history_add_and_print passed\n");
+}
+
+void test_history_circular_buffer(void)
+{
+    mock_input("echo cmd1\necho cmd2\necho cmd3\necho cmd4\nhistory\nexit\n");
+
+    char *output = NULL;
+    int result = execute_with_output(loop, &output);
+
+    assert(result == EXIT_SUCCESS);
+    assert(strstr(output, "cmd2") != NULL);
+    assert(strstr(output, "cmd3") != NULL);
+    assert(strstr(output, "cmd4") != NULL);
+
+    free(output);
+    printf("✓ test_history_circular_buffer passed\n");
 }
 
 int main(void)
 {
-    CU_initialize_registry();
-    CU_pSuite suite = CU_add_suite("Shell Function Test Suite", 0, 0);
-    CU_add_test(suite, "test_shell_long_input", test_shell_long_input);
-    CU_add_test(suite, "test_shell_exit", test_shell_exit);
-    CU_basic_set_mode(CU_BRM_VERBOSE);
-    CU_basic_run_tests();
-    CU_cleanup_registry();
-    return CU_get_error();
+    printf("Running shell tests...\n\n");
+
+    test_shell_long_input();
+    test_shell_exit();
+    test_history_print_empty();
+    test_history_add_and_print();
+    test_history_circular_buffer();
+
+    printf("\n✓ All tests passed!\n");
+    return EXIT_SUCCESS;
 }
