@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <dirent.h>
 #include "history.h"
 
 int mosh_help(char **);
@@ -121,7 +122,22 @@ int mosh_echo(char **args)
 
 int mosh_ls(char **args)
 {
-    // TODO: Implement ls command
+    char *curr_dir;
+
+    curr_dir = getcwd(NULL, 0);
+
+    DIR *dir = opendir(curr_dir);
+
+    struct dirent *entry;
+
+    while ((entry = readdir(dir)) != NULL)
+    {
+        printf("%s\n", entry->d_name);
+    }
+
+    closedir(dir);
+    free(curr_dir);
+
     return 1;
 }
 

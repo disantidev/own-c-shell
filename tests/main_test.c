@@ -132,6 +132,27 @@ void test_history_circular_buffer(void)
     printf("✓ test_history_circular_buffer passed\n");
 }
 
+void test_ls(void)
+{
+    mock_input("\
+        touch file-not-found.txt file-found.txt\n\
+        rm file-not-found.txt\n\
+        ls\n\
+        rm file-found.txt\n\
+        exit\n\
+    ");
+
+    char *output = NULL;
+    int result = execute_with_output(loop, &output);
+
+    assert(result == EXIT_SUCCESS);
+    assert(strstr(output, "file-not-found.txt") == NULL);
+    assert(strstr(output, "file-found.txt") != NULL);
+
+    free(output);
+    printf("✓ test_ls passed\n");
+}
+
 int main(void)
 {
     printf("Running shell tests...\n\n");
@@ -141,6 +162,7 @@ int main(void)
     test_history_print_empty();
     test_history_add_and_print();
     test_history_circular_buffer();
+    test_ls();
 
     printf("\n✓ All tests passed!\n");
     return EXIT_SUCCESS;
