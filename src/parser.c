@@ -32,6 +32,8 @@ char **parse_line(char *line)
     args[i] = NULL;
   }
 
+  int argCap = 1024;
+
   while (line[lpos])
   {
     c = line[lpos];
@@ -44,7 +46,24 @@ char **parse_line(char *line)
 
     if (args[argidx] == NULL)
     {
-      args[argidx] = (char *)malloc(sizeof(char) * 1024);
+      argCap = 1024;
+      args[argidx] = (char *)malloc(sizeof(char) * argCap);
+
+      if (!args[argidx]) {
+        fprintf(stderr, "%s: allocation error\n", SHELL_NAME);
+        exit(EXIT_FAILURE);
+      }
+    }
+
+    if (argpos >= argCap - 1) {
+        argCap *= 2;
+        char *temp = realloc(args[argidx], sizeof(char) * argCap);
+
+        if (!temp) {
+             fprintf(stderr, "%s: allocation error\n", SHELL_NAME);
+             exit(EXIT_FAILURE);
+        }
+        args[argidx] = temp;
     }
 
     if (c == '$' && (currState == NORMAL || currState == DOUBLE))
@@ -79,7 +98,18 @@ char **parse_line(char *line)
         {
           int valLen = strlen(varValue);
           
-          if (argpos + valLen < 1024) 
+          // Ensure space for variable expansion
+          while (argpos + valLen >= argCap) {
+             argCap *= 2;
+             char *temp = realloc(args[argidx], sizeof(char) * argCap);
+             if (!temp) {
+                 fprintf(stderr, "%s: allocation error\n", SHELL_NAME);
+                 exit(EXIT_FAILURE);
+             }
+             args[argidx] = temp;
+          }
+
+          if (argpos + valLen < argCap) 
           {
              strcpy(&args[argidx][argpos], varValue);
              argpos += valLen;
@@ -102,6 +132,7 @@ char **parse_line(char *line)
           args[argidx][argpos] = '\0';
           argidx++;
           argpos = 0;
+          argCap = 1024;
 
           while (line[lpos + 1] && isspace(line[lpos + 1]))
           {
@@ -116,8 +147,19 @@ char **parse_line(char *line)
         char *home = getenv("HOME");
         if (home)
         {
+          int homeLen = strlen(home);
+          while (argpos + homeLen >= argCap) {
+             argCap *= 2;
+             char *temp = realloc(args[argidx], sizeof(char) * argCap);
+             if (!temp) {
+                 fprintf(stderr, "%s: allocation error\n", SHELL_NAME);
+                 exit(EXIT_FAILURE);
+             }
+             args[argidx] = temp;
+          }
+
           strcpy(&args[argidx][argpos], home);
-          argpos += strlen(home);
+          argpos += homeLen;
           lpos++;
           continue;
         }
