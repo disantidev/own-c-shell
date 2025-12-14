@@ -66,6 +66,17 @@ char **parse_line(char *line)
         lpos++;
         continue;
       }
+      else if (c == '~' && argpos == 0 && (line[lpos + 1] == '/' || line[lpos + 1] == '\0' || isspace(line[lpos + 1])))
+      {
+        char *home = getenv("HOME");
+        if (home)
+        {
+          strcpy(&args[argidx][argpos], home);
+          argpos += strlen(home);
+          lpos++;
+          continue;
+        }
+      }
       else if (c == '\'')
       {
         prevState = currState;
@@ -82,14 +93,7 @@ char **parse_line(char *line)
       }
       break;
     case SINGLE:
-      if (c == '\\')
-      {
-        prevState = SINGLE;
-        currState = ESCAPE;
-        lpos++;
-        continue;
-      }
-      else if (c == '\'')
+      if (c == '\'')
       {
         currState = NORMAL;
         lpos++;

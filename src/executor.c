@@ -18,7 +18,7 @@ int execute_process(char **args)
       perror("mosh");
     }
 
-    exit(EXIT_FAILURE);
+    exit(127);
   }
   else if (pid < 0)
   {

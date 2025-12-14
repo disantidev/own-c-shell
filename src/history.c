@@ -1,17 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
 #include <unistd.h>
 #include "history.h"
 
 #define HISTORY_FILENAME ".mosh_history"
-#define MAX_HISTORY_SIZE 3
+#define MAX_HISTORY_SIZE 1000
 #define MAX_HISTORY_LINE_SIZE 4096
 
 int history_buffer_index = 0;
 int history_buffer_count = 0;
-char history_buffer[MAX_HISTORY_SIZE][MAX_HISTORY_LINE_SIZE];
+char *history_buffer[MAX_HISTORY_SIZE];
 
 char *get_history_filepath(void)
 {
@@ -24,34 +23,48 @@ char *get_history_filepath(void)
 
 void history_cleanup(void)
 {
+    for (int i = 0; i < history_buffer_count; i++)
+    {
+        free(history_buffer[i]);
+        history_buffer[i] = NULL;
+    }
     history_buffer_index = 0;
     history_buffer_count = 0;
-    memset(history_buffer, 0, sizeof(history_buffer));
 }
 
 int history_load(void)
 {
-    int fd;
-    char line[MAX_HISTORY_LINE_SIZE];
+    FILE *fp;
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read_len;
     char *filepath = get_history_filepath();
 
     history_cleanup();
 
-    if ((fd = open(filepath, O_CREAT | O_RDONLY, 0644)) == -1)
+    if ((fp = fopen(filepath, "r")) == NULL)
     {
-        perror("open");
+        // It's okay if file doesn't exist yet
         free(filepath);
-        return -1;
+        return 0;
     }
 
-    while ((read(fd, line, sizeof(line))) > 0)
+    while ((read_len = getline(&line, &len, fp)) != -1)
     {
-        strcpy(history_buffer[history_buffer_index], line);
-        history_buffer_index++;
-        history_buffer_count++;
+        if (read_len > 0 && line[read_len - 1] == '\n') {
+            line[read_len - 1] = '\0';
+        }
+        
+        if (history_buffer_count < MAX_HISTORY_SIZE) {
+            history_buffer[history_buffer_count] = strdup(line);
+            history_buffer_count++;
+            history_buffer_index++;
+        }
     }
 
-    close(fd);
+    if (line)
+        free(line);
+    fclose(fp);
     free(filepath);
 
     return 0;
@@ -61,7 +74,7 @@ int history_print(void)
 {
     for (int i = 0; i < history_buffer_count; i++)
     {
-        printf("%s", history_buffer[i]);
+        printf("%5d  %s\n", i + 1, history_buffer[i]);
     }
 
     return 0;
@@ -69,12 +82,12 @@ int history_print(void)
 
 int history_write(void)
 {
-    int fd;
+    FILE *fp;
     char *filepath = get_history_filepath();
 
-    if ((fd = open(filepath, O_CREAT | O_TRUNC | O_WRONLY, 0644)) == -1)
+    if ((fp = fopen(filepath, "w")) == NULL)
     {
-        perror("open");
+        perror("fopen");
         free(filepath);
         return -1;
     }
@@ -82,38 +95,40 @@ int history_write(void)
 
     for (int i = 0; i < history_buffer_count; i++)
     {
-        if (write(fd, history_buffer[i], MAX_HISTORY_LINE_SIZE) != MAX_HISTORY_LINE_SIZE)
+        if (history_buffer[i] != NULL)
         {
-            perror("write");
-            break;
+            fprintf(fp, "%s\n", history_buffer[i]);
         }
     }
 
-    close(fd);
+    fclose(fp);
 
     return 0;
 }
 
 int history_add(char *line)
 {
+    if (line == NULL || strlen(line) == 0) return 0;
+
+    // Don't add if multiple same commands in a row
+    if (history_buffer_count > 0 && strcmp(history_buffer[history_buffer_count - 1], line) == 0) {
+        return 0;
+    }
+
     if (history_buffer_count == MAX_HISTORY_SIZE)
     {
-        for (int i = 0; i < history_buffer_count; i++)
+        free(history_buffer[0]);
+        for (int i = 0; i < history_buffer_count - 1; i++)
         {
-            strncpy(
-                history_buffer[i],
-                i == history_buffer_count - 1
-                    ? line
-                    : history_buffer[i + 1],
-                MAX_HISTORY_LINE_SIZE);
+            history_buffer[i] = history_buffer[i + 1];
         }
+        history_buffer_count--;
+        history_buffer_index--;
     }
-    else
-    {
-        strncpy(history_buffer[history_buffer_index], line, MAX_HISTORY_LINE_SIZE);
-        history_buffer_count++;
-        history_buffer_index++;
-    }
+
+    history_buffer[history_buffer_count] = strdup(line);
+    history_buffer_count++;
+    history_buffer_index++;
 
     if (history_write() == -1)
     {
@@ -121,4 +136,4 @@ int history_add(char *line)
     }
 
     return 0;
-};
+}
