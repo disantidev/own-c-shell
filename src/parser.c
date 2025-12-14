@@ -47,6 +47,51 @@ char **parse_line(char *line)
       args[argidx] = (char *)malloc(sizeof(char) * 1024);
     }
 
+    if (c == '$' && (currState == NORMAL || currState == DOUBLE))
+    {
+      if (line[lpos + 1] == '?')
+      {
+        lpos += 2;
+        continue;
+      }
+      else if (line[lpos + 1] == '$')
+      {
+        lpos += 2;
+        continue;
+      }
+      else if (isalpha(line[lpos + 1]) || line[lpos + 1] == '_')
+      {
+        int varLen = 0;
+        int varStart = lpos + 1;
+
+        while (isalnum(line[varStart + varLen]) || line[varStart + varLen] == '_')
+        {
+          varLen++;
+        }
+
+        char *varName = (char *)malloc(sizeof(char) * (varLen + 1));
+        strncpy(varName, &line[varStart], varLen);
+        varName[varLen] = '\0';
+
+        char *varValue = getenv(varName);
+
+        if (varValue)
+        {
+          int valLen = strlen(varValue);
+          
+          if (argpos + valLen < 1024) 
+          {
+             strcpy(&args[argidx][argpos], varValue);
+             argpos += valLen;
+          }
+        }
+
+        free(varName);
+        lpos += 1 + varLen; 
+        continue;
+      }
+    }
+
     switch (currState)
     {
     case NORMAL:
