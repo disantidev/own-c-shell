@@ -80,6 +80,25 @@ int history_print(void)
     return 0;
 }
 
+int history_append(char *line)
+{
+    FILE *fp;
+    char *filepath = get_history_filepath();
+
+    if ((fp = fopen(filepath, "a")) == NULL)
+    {
+        perror("fopen");
+        free(filepath);
+        return -1;
+    }
+    free(filepath);
+
+    fprintf(fp, "%s\n", line);
+    fclose(fp);
+
+    return 0;
+}
+
 int history_write(void)
 {
     FILE *fp;
@@ -130,9 +149,9 @@ int history_add(char *line)
     history_buffer_count++;
     history_buffer_index++;
 
-    if (history_write() == -1)
+    if (history_append(line) == -1)
     {
-        perror("history_write");
+        perror("history_append");
     }
 
     return 0;
