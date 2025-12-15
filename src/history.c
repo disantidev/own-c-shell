@@ -44,7 +44,6 @@ int history_load(void)
 
     if ((fp = fopen(filepath, "r")) == NULL)
     {
-        // It's okay if file doesn't exist yet
         free(filepath);
         return 0;
     }
@@ -129,7 +128,6 @@ int history_add(char *line)
 {
     if (line == NULL || strlen(line) == 0) return 0;
 
-    // Don't add if multiple same commands in a row
     if (history_buffer_count > 0 && strcmp(history_buffer[history_buffer_count - 1], line) == 0) {
         return 0;
     }

@@ -98,7 +98,6 @@ char **parse_line(char *line)
         {
           int valLen = strlen(varValue);
           
-          // Ensure space for variable expansion
           while (argpos + valLen >= argCap) {
              argCap *= 2;
              char *temp = realloc(args[argidx], sizeof(char) * argCap);

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "builtins.h"
+#include "alias.h"
 
 int execute_process(char **args)
 {
@@ -45,6 +46,13 @@ int execute_args(char **args)
   if (builtin_r != -1)
   {
     return builtin_r;
+  }
+
+  char *resolved_command = resolve_alias(args[0]);
+
+  if (strcmp(resolved_command, args[0]) != 0)
+  {
+    args[0] = resolved_command;
   }
 
   return execute_process(args);

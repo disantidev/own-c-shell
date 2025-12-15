@@ -8,14 +8,21 @@
 #include "../src/history.h"
 
 static int stdout_backup;
+static int stderr_backup;
 
 void suppress_stdout()
 {
     fflush(stdout);
+    fflush(stderr);
     stdout_backup = dup(STDOUT_FILENO);
+    stderr_backup = dup(STDERR_FILENO);
+    
     FILE *stdout_fp = fopen("stdout.txt", "a");
     int stdout_fd = fileno(stdout_fp);
+    
     dup2(stdout_fd, STDOUT_FILENO);
+    dup2(stdout_fd, STDERR_FILENO);
+    
     close(stdout_fd);
     fclose(stdout_fp);
 }
@@ -23,8 +30,14 @@ void suppress_stdout()
 void resume_stdout(char **output)
 {
     fflush(stdout);
+    fflush(stderr);
+    
     dup2(stdout_backup, STDOUT_FILENO);
+    dup2(stderr_backup, STDERR_FILENO);
+    
     close(stdout_backup);
+    close(stderr_backup);
+    
     FILE *stdout_fp = fopen("stdout.txt", "r");
     fseek(stdout_fp, 0, SEEK_END);
     long size = ftell(stdout_fp);
@@ -153,6 +166,50 @@ void test_ls(void)
     printf("✓ test_ls passed\n");
 }
 
+void test_alias_substitution(void)
+{
+    mock_input("alias my_echo=echo\nmy_echo test_message\nexit\n");
+
+    char *output = NULL;
+    int result = execute_with_output(loop, &output);
+
+    assert(result == EXIT_SUCCESS);
+    assert(strstr(output, "test_message") != NULL);
+
+    free(output);
+    printf("✓ test_alias_substitution passed\n");
+}
+
+void test_alias_recursive(void)
+{
+    mock_input("alias echo2=echo\nalias echo3=echo2\necho3 recursive_test\nexit\n");
+
+    char *output = NULL;
+    int result = execute_with_output(loop, &output);
+
+    assert(result == EXIT_SUCCESS);
+    assert(strstr(output, "recursive_test") != NULL);
+
+    free(output);
+    printf("✓ test_alias_recursive passed\n");
+}
+
+void test_alias_cycle(void)
+{
+    mock_input("alias a=b\nalias b=a\na\nexit\n");
+
+    char *output = NULL;
+    int result = execute_with_output(loop, &output);
+
+    assert(result == EXIT_SUCCESS);
+    assert(strstr(output, "alias cycle detected") != NULL);
+
+    free(output);
+    printf("✓ test_alias_cycle passed\n");
+}
+
+
+
 int main(void)
 {
     printf("Running shell tests...\n\n");
@@ -163,6 +220,7 @@ int main(void)
     test_history_add_and_print();
     test_history_circular_buffer();
     test_ls();
+    test_alias_cycle();
 
     printf("\n✓ All tests passed!\n");
     return EXIT_SUCCESS;

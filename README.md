@@ -48,7 +48,7 @@ A comprehensive shell implementation project for mastering C systems programming
   - _Learn_: `environ`, `getenv()`, `setenv()`, variable scope
   - _Key concepts_: Process environment inheritance
   - _Challenge_: Implement variable expansion: `echo $HOME/docs`
-- [ ] **Alias support**
+- [x] **Alias support**
   - _Learn_: Hash tables, string replacement, recursive expansion
   - _Key concepts_: Alias resolution order, infinite recursion prevention
 - [ ] **Autocomplete for commands and files**

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "history.h"
+#include "alias.h"
 
 int mosh_help(char **);
 int mosh_exit(char **);
@@ -15,6 +16,7 @@ int mosh_cd(char **);
 int mosh_pwd(char **);
 int mosh_echo(char **);
 int mosh_history(char **);
+int mosh_alias(char **);
 
 char *builtin_str[] = {
     "help",
@@ -22,7 +24,9 @@ char *builtin_str[] = {
     "cd",
     "pwd",
     "echo",
-    "history"};
+    "history",
+    "alias",
+};
 
 int (*builtin_func[])(char **) = {
     &mosh_help,
@@ -30,7 +34,9 @@ int (*builtin_func[])(char **) = {
     &mosh_cd,
     &mosh_pwd,
     &mosh_echo,
-    &mosh_history};
+    &mosh_history,
+    &mosh_alias,
+};
 
 int get_builtin_size()
 {
@@ -66,6 +72,33 @@ int mosh_help(char **args)
     printf("pwd - Print working directory\n");
     printf("echo - Display a line of text\n");
     printf("history - List history contents\n");
+    printf("alias - Create an alias\n");
+    return 1;
+}
+
+int mosh_alias(char **args)
+{
+    char *var = strtok(args[1], "=");
+    char *value = strtok(NULL, "=");
+
+    if (var == NULL)
+    {
+        fprintf(stderr, "mosh: alias: missing variable name\n");
+        return 1;
+    }
+
+    if (value == NULL)
+    {
+        fprintf(stderr, "mosh: alias: missing value\n");
+        return 1;
+    }
+
+    if (set_alias(var, value) != 0)
+    {
+        fprintf(stderr, "mosh: alias: %s: %s\n", var, value);
+        return 1;
+    }
+
     return 1;
 }
 
