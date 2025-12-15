@@ -78,6 +78,11 @@ int mosh_help(char **args)
 
 int mosh_alias(char **args)
 {
+    if (args[1] == NULL)
+    {
+        return print_aliases();
+    }
+
     char *var = strtok(args[1], "=");
     char *value = strtok(NULL, "=");
 

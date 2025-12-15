@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "mosh.h"
 
-int main(int argc, char *argv[])
+int main(void)
 {
   return loop();
 }

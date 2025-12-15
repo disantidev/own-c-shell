@@ -236,6 +236,20 @@ void test_alias_args(void)
     printf("✓ test_alias_args passed\n");
 }
 
+void test_alias_no_args(void)
+{
+    mock_input("alias a=b\nalias\nexit\n");
+
+    char *output = NULL;
+    int result = execute_with_output(loop, &output);
+
+    assert(result == EXIT_SUCCESS);
+    assert(strstr(output, "a=b") != NULL);
+
+    free(output);
+    printf("✓ test_alias_no_args passed\n");
+}
+
 int main(void)
 {
     printf("Running shell tests...\n\n");
@@ -249,6 +263,7 @@ int main(void)
     test_alias_cycle();
     test_alias_multi_word();
     test_alias_args();
+    test_alias_no_args();
 
     printf("\n✓ All tests passed!\n");
     return EXIT_SUCCESS;
