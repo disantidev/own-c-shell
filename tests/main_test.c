@@ -208,7 +208,33 @@ void test_alias_cycle(void)
     printf("✓ test_alias_cycle passed\n");
 }
 
+void test_alias_multi_word(void)
+{
+    mock_input("alias echo_success=\"echo success\"\necho_success\nexit\n");
 
+    char *output = NULL;
+    int result = execute_with_output(loop, &output);
+
+    assert(result == EXIT_SUCCESS);
+    assert(strstr(output, "success") != NULL);
+
+    free(output);
+    printf("✓ test_alias_multi_word passed\n");
+}
+
+void test_alias_args(void)
+{
+    mock_input("alias my_echo=echo\nmy_echo arg1 arg2\nexit\n");
+
+    char *output = NULL;
+    int result = execute_with_output(loop, &output);
+
+    assert(result == EXIT_SUCCESS);
+    assert(strstr(output, "arg1 arg2") != NULL);
+
+    free(output);
+    printf("✓ test_alias_args passed\n");
+}
 
 int main(void)
 {
@@ -221,6 +247,8 @@ int main(void)
     test_history_circular_buffer();
     test_ls();
     test_alias_cycle();
+    test_alias_multi_word();
+    test_alias_args();
 
     printf("\n✓ All tests passed!\n");
     return EXIT_SUCCESS;
