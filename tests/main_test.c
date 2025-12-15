@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "../src/mosh.h"
 #include "../src/history.h"
+#include "autocomplete_test.h"
 
 static int stdout_backup;
 static int stderr_backup;
@@ -264,6 +265,7 @@ int main(void)
     test_alias_multi_word();
     test_alias_args();
     test_alias_no_args();
+    run_autocomplete_tests();
 
     printf("\n✓ All tests passed!\n");
     return EXIT_SUCCESS;

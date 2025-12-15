@@ -51,7 +51,7 @@ A comprehensive shell implementation project for mastering C systems programming
 - [x] **Alias support**
   - _Learn_: Hash tables, string replacement, recursive expansion
   - _Key concepts_: Alias resolution order, infinite recursion prevention
-- [ ] **Autocomplete for commands and files**
+- [x] **Autocomplete for commands and files**
   - _Learn_: Directory traversal, string matching algorithms
   - _Key concepts_: `readdir()`, prefix matching, performance optimization
 

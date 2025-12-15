@@ -38,14 +38,20 @@ int (*builtin_func[])(char **) = {
     &mosh_alias,
 };
 
-int get_builtin_size()
+int get_builtin_count()
 {
     return sizeof(builtin_str) / sizeof(char *);
 }
 
+const char **get_builtins()
+{
+    return (const char **)builtin_str;
+}
+
+
 int execute_builtin(char **args)
 {
-    for (int i = 0; i < get_builtin_size(); i++)
+    for (int i = 0; i < get_builtin_count(); i++)
     {
         if (strcmp(args[0], builtin_str[i]) == 0)
         {

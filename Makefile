@@ -13,7 +13,7 @@ APP_EXEC = $(BUILD_DIR)/main
 
 # Test sources: all src/*.c except src/main.c, plus tests/main_test.c
 TEST_APP_SRCS = $(filter-out $(SRC_DIR)/main.c, $(APP_SRCS))
-TEST_SRCS = $(TEST_DIR)/main_test.c $(TEST_APP_SRCS)
+TEST_SRCS = $(TEST_DIR)/main_test.c $(TEST_DIR)/autocomplete_test.c $(TEST_APP_SRCS)
 TEST_OBJS = $(addprefix $(BUILD_DIR)/,$(notdir $(TEST_SRCS:.c=.o)))
 TEST_EXEC = $(BUILD_DIR)/main_test
 
