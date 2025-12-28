@@ -1,21 +1,14 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #define SHELL_NAME "mosh"
 #define NUM_ARGS 64
 
-enum State
-{
-  NORMAL,
-  SINGLE,
-  DOUBLE,
-  ESCAPE
-};
+enum State { NORMAL, SINGLE, DOUBLE, ESCAPE };
 
-char **parse_line(char *line)
-{
+char **parse_line(char *line) {
   char **args;
   int lpos = 0;
   int argidx = 0;
@@ -27,25 +20,21 @@ char **parse_line(char *line)
 
   args = (char **)malloc(sizeof(char *) * NUM_ARGS);
 
-  for (int i = 0; i < NUM_ARGS; i++)
-  {
+  for (int i = 0; i < NUM_ARGS; i++) {
     args[i] = NULL;
   }
 
   int argCap = 1024;
 
-  while (line[lpos])
-  {
+  while (line[lpos]) {
     c = line[lpos];
 
-    if (argidx >= NUM_ARGS - 1)
-    {
+    if (argidx >= NUM_ARGS - 1) {
       fprintf(stderr, "%s: too many arguments\n", SHELL_NAME);
       break;
     }
 
-    if (args[argidx] == NULL)
-    {
+    if (args[argidx] == NULL) {
       argCap = 1024;
       args[argidx] = (char *)malloc(sizeof(char) * argCap);
 
@@ -56,35 +45,29 @@ char **parse_line(char *line)
     }
 
     if (argpos >= argCap - 1) {
-        argCap *= 2;
-        char *temp = realloc(args[argidx], sizeof(char) * argCap);
+      argCap *= 2;
+      char *temp = realloc(args[argidx], sizeof(char) * argCap);
 
-        if (!temp) {
-             fprintf(stderr, "%s: allocation error\n", SHELL_NAME);
-             exit(EXIT_FAILURE);
-        }
-        args[argidx] = temp;
+      if (!temp) {
+        fprintf(stderr, "%s: allocation error\n", SHELL_NAME);
+        exit(EXIT_FAILURE);
+      }
+      args[argidx] = temp;
     }
 
-    if (c == '$' && (currState == NORMAL || currState == DOUBLE))
-    {
-      if (line[lpos + 1] == '?')
-      {
+    if (c == '$' && (currState == NORMAL || currState == DOUBLE)) {
+      if (line[lpos + 1] == '?') {
         lpos += 2;
         continue;
-      }
-      else if (line[lpos + 1] == '$')
-      {
+      } else if (line[lpos + 1] == '$') {
         lpos += 2;
         continue;
-      }
-      else if (isalpha(line[lpos + 1]) || line[lpos + 1] == '_')
-      {
+      } else if (isalpha(line[lpos + 1]) || line[lpos + 1] == '_') {
         int varLen = 0;
         int varStart = lpos + 1;
 
-        while (isalnum(line[varStart + varLen]) || line[varStart + varLen] == '_')
-        {
+        while (isalnum(line[varStart + varLen]) ||
+               line[varStart + varLen] == '_') {
           varLen++;
         }
 
@@ -94,67 +77,112 @@ char **parse_line(char *line)
 
         char *varValue = getenv(varName);
 
-        if (varValue)
-        {
+        if (varValue) {
           int valLen = strlen(varValue);
-          
+
           while (argpos + valLen >= argCap) {
-             argCap *= 2;
-             char *temp = realloc(args[argidx], sizeof(char) * argCap);
-             if (!temp) {
-                 fprintf(stderr, "%s: allocation error\n", SHELL_NAME);
-                 exit(EXIT_FAILURE);
-             }
-             args[argidx] = temp;
+            argCap *= 2;
+            char *temp = realloc(args[argidx], sizeof(char) * argCap);
+            if (!temp) {
+              fprintf(stderr, "%s: allocation error\n", SHELL_NAME);
+              exit(EXIT_FAILURE);
+            }
+            args[argidx] = temp;
           }
 
-          if (argpos + valLen < argCap) 
-          {
-             strcpy(&args[argidx][argpos], varValue);
-             argpos += valLen;
+          if (argpos + valLen < argCap) {
+            strcpy(&args[argidx][argpos], varValue);
+            argpos += valLen;
           }
         }
 
         free(varName);
-        lpos += 1 + varLen; 
+        lpos += 1 + varLen;
         continue;
       }
     }
 
-    switch (currState)
-    {
+    switch (currState) {
     case NORMAL:
-      if (isspace(c) && currState == NORMAL)
-      {
-        if (argpos > 0)
-        {
+      if (isspace(c) && currState == NORMAL) {
+        if (argpos > 0) {
           args[argidx][argpos] = '\0';
           argidx++;
           argpos = 0;
           argCap = 1024;
 
-          while (line[lpos + 1] && isspace(line[lpos + 1]))
-          {
+          while (line[lpos + 1] && isspace(line[lpos + 1])) {
             lpos++;
           }
         }
         lpos++;
         continue;
-      }
-      else if (c == '~' && argpos == 0 && (line[lpos + 1] == '/' || line[lpos + 1] == '\0' || isspace(line[lpos + 1])))
-      {
+      } else if ((c == '>' || c == '<' || c == '|') && currState == NORMAL) {
+        // IF we were building a token, finish it
+        if (argpos > 0) {
+          // Special case for '2>'
+          if (c == '>' && argpos == 1 && args[argidx][0] == '2') {
+            // It is 2>, continue adding to this token
+            // ACTUALLY, we want 2> to be a single token.
+            // If we had "cmd 2>", now we are at '>'. argpos=1, buf[0]='2'.
+            // We should proceed to add '>' to it.
+          } else {
+            // Finish current token
+            args[argidx][argpos] = '\0';
+            argidx++;
+            argpos = 0;
+            argCap = 1024;
+
+            // Allocate for next token (the delimiter)
+            if (args[argidx] == NULL) {
+              argCap = 1024;
+              args[argidx] = (char *)malloc(sizeof(char) * argCap);
+              if (!args[argidx]) {
+                fprintf(stderr, "%s: allocation error\n", SHELL_NAME);
+                exit(EXIT_FAILURE);
+              }
+            }
+          }
+        }
+
+        // Now handle the delimiter
+        // Check for >>
+        if (c == '>' && line[lpos + 1] == '>') {
+          args[argidx][argpos++] = c;
+          args[argidx][argpos++] = c; // second >
+          lpos++;                     // skip second >
+        }
+        // Check for 2> (if we just started this token or it was empty)
+        else {
+          args[argidx][argpos++] = c;
+        }
+
+        args[argidx][argpos] = '\0';
+        argidx++;
+        argpos = 0;
+        argCap = 1024;
+
+        // Skip spaces after delimiter
+        while (line[lpos + 1] && isspace(line[lpos + 1])) {
+          lpos++;
+        }
+
+        lpos++;
+        continue;
+      } else if (c == '~' && argpos == 0 &&
+                 (line[lpos + 1] == '/' || line[lpos + 1] == '\0' ||
+                  isspace(line[lpos + 1]))) {
         char *home = getenv("HOME");
-        if (home)
-        {
+        if (home) {
           int homeLen = strlen(home);
           while (argpos + homeLen >= argCap) {
-             argCap *= 2;
-             char *temp = realloc(args[argidx], sizeof(char) * argCap);
-             if (!temp) {
-                 fprintf(stderr, "%s: allocation error\n", SHELL_NAME);
-                 exit(EXIT_FAILURE);
-             }
-             args[argidx] = temp;
+            argCap *= 2;
+            char *temp = realloc(args[argidx], sizeof(char) * argCap);
+            if (!temp) {
+              fprintf(stderr, "%s: allocation error\n", SHELL_NAME);
+              exit(EXIT_FAILURE);
+            }
+            args[argidx] = temp;
           }
 
           strcpy(&args[argidx][argpos], home);
@@ -162,16 +190,12 @@ char **parse_line(char *line)
           lpos++;
           continue;
         }
-      }
-      else if (c == '\'')
-      {
+      } else if (c == '\'') {
         prevState = currState;
         currState = SINGLE;
         lpos++;
         continue;
-      }
-      else if (c == '\"')
-      {
+      } else if (c == '\"') {
         prevState = currState;
         currState = DOUBLE;
         lpos++;
@@ -179,23 +203,19 @@ char **parse_line(char *line)
       }
       break;
     case SINGLE:
-      if (c == '\'')
-      {
+      if (c == '\'') {
         currState = NORMAL;
         lpos++;
         continue;
       }
       break;
     case DOUBLE:
-      if (c == '\\')
-      {
+      if (c == '\\') {
         prevState = DOUBLE;
         currState = ESCAPE;
         lpos++;
         continue;
-      }
-      else if (c == '\"')
-      {
+      } else if (c == '\"') {
         currState = NORMAL;
         lpos++;
         continue;
@@ -222,8 +242,7 @@ char **parse_line(char *line)
       continue;
     }
 
-    if (currState != ESCAPE)
-    {
+    if (currState != ESCAPE) {
       args[argidx][argpos] = c;
       args[argidx][argpos + 1] = '\0';
       argpos++;
@@ -231,30 +250,25 @@ char **parse_line(char *line)
 
     lpos++;
   }
-  if (argpos > 0)
-  {
+  if (argpos > 0) {
     args[argidx][argpos] = '\0';
     argidx++;
   }
 
   args[argidx] = NULL;
 
-  if (currState == SINGLE)
-  {
+  if (currState == SINGLE) {
     fprintf(stderr, "%s: unclosed single quote\n", SHELL_NAME);
   }
-  if (currState == DOUBLE)
-  {
+  if (currState == DOUBLE) {
     fprintf(stderr, "%s: unclosed double quote\n", SHELL_NAME);
   }
 
   return args;
 }
 
-void free_parsed_args(char **args)
-{
-  for (int i = 0; args[i] != NULL; i++)
-  {
+void free_parsed_args(char **args) {
+  for (int i = 0; args[i] != NULL; i++) {
     free(args[i]);
   }
   free(args);

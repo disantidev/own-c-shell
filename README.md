@@ -59,7 +59,7 @@ A comprehensive shell implementation project for mastering C systems programming
 
 **Core Concepts**: Pipes, redirection, signals, job control
 
-- [ ] **I/O redirect (>, <, >>, 2>, &>)**
+- [x] **I/O redirect (>, <, >>, 2>, &>)**
   - _Learn_: File descriptors, `dup2()`, stream redirection
   - _Key concepts_: `STDOUT_FILENO`, `STDERR_FILENO`, file creation modes
   - _Debug_: Use `ls -la /proc/self/fd/` to inspect open files

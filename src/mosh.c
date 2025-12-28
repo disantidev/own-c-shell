@@ -1,13 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "utils.h"
-#include "parser.h"
 #include "executor.h"
 #include "history.h"
+#include "parser.h"
+#include "utils.h"
 
-int loop(void)
-{
+int loop(void) {
   int status;
   char *line;
   char **args;
@@ -16,9 +15,10 @@ int loop(void)
 
   history_load();
 
-  do
-  {
+  do {
     line = read_line();
+    if (line == NULL)
+      break;
     history_add(line);
     args = parse_line(line);
     status = execute_args(args);
