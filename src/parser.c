@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "parser.h"
 
 #define SHELL_NAME "mosh"
 #define NUM_ARGS 64
@@ -265,6 +266,64 @@ char **parse_line(char *line) {
   }
 
   return args;
+}
+
+int contains_pipe(char **args) {
+  for (int i = 0; args[i] != NULL; i++) {
+    if (strcmp(args[i], "|") == 0) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+pipe_command_t *parse_pipeline(char *line) {
+  pipe_command_t *pipeline = malloc(sizeof(pipe_command_t));
+  if (!pipeline) {
+    return NULL;
+  }
+  
+  pipeline->num_stages = 0;
+  for (int i = 0; i < MAX_PIPE_STAGES; i++) {
+    pipeline->commands[i] = NULL;
+  }
+  
+  char *line_copy = strdup(line);
+  char *token = strtok(line_copy, "|");
+  
+  while (token != NULL && pipeline->num_stages < MAX_PIPE_STAGES) {
+    // Trim leading/trailing whitespace from token
+    while (*token == ' ' || *token == '\t') token++;
+    
+    char *end = token + strlen(token) - 1;
+    while (end > token && (*end == ' ' || *end == '\t')) end--;
+    *(end + 1) = '\0';
+    
+    pipeline->commands[pipeline->num_stages] = parse_line(token);
+    if (!pipeline->commands[pipeline->num_stages]) {
+      free_pipeline(pipeline);
+      free(line_copy);
+      return NULL;
+    }
+    
+    pipeline->num_stages++;
+    token = strtok(NULL, "|");
+  }
+  
+  free(line_copy);
+  return pipeline;
+}
+
+void free_pipeline(pipe_command_t *pipeline) {
+  if (!pipeline) return;
+  
+  for (int i = 0; i < pipeline->num_stages; i++) {
+    if (pipeline->commands[i]) {
+      free_parsed_args(pipeline->commands[i]);
+    }
+  }
+  
+  free(pipeline);
 }
 
 void free_parsed_args(char **args) {

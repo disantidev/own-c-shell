@@ -63,7 +63,7 @@ A comprehensive shell implementation project for mastering C systems programming
   - _Learn_: File descriptors, `dup2()`, stream redirection
   - _Key concepts_: `STDOUT_FILENO`, `STDERR_FILENO`, file creation modes
   - _Debug_: Use `ls -la /proc/self/fd/` to inspect open files
-- [ ] **Multi-stage pipes (ls | grep txt | wc)**
+- [x] **Multi-stage pipes (ls | grep txt | wc)**
   - _Learn_: `pipe()`, process chains, file descriptor inheritance
   - _Key concepts_: Inter-process communication, data flow
   - _Challenge_: Handle N-stage pipes dynamically

@@ -2,10 +2,13 @@
 #include "builtins.h"
 #include "parser.h"
 #include "redirect.h"
+#include <sys/wait.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+int execute_pipeline(pipe_command_t *pipeline);
 
 int execute_process(char **args) {
   pid_t pid;
@@ -33,6 +36,39 @@ int execute_process(char **args) {
 int execute_args(char **args) {
   if (args[0] == NULL)
     return 1;
+
+  // Check if this is a pipeline
+  if (contains_pipe(args)) {
+    // Reconstruct the command line from args
+    int total_len = 0;
+    for (int i = 0; args[i] != NULL; i++) {
+      total_len += strlen(args[i]) + 1; // +1 for space or null
+    }
+    
+    char *command_line = malloc(total_len);
+    if (!command_line) {
+      return 1;
+    }
+    
+    command_line[0] = '\0';
+    for (int i = 0; args[i] != NULL; i++) {
+      strcat(command_line, args[i]);
+      if (args[i + 1] != NULL) {
+        strcat(command_line, " ");
+      }
+    }
+    
+    pipe_command_t *pipeline = parse_pipeline(command_line);
+    free(command_line);
+    
+    if (!pipeline) {
+      return 1;
+    }
+    
+    int result = execute_pipeline(pipeline);
+    free_pipeline(pipeline);
+    return result;
+  }
 
   int saved_stdin, saved_stdout, saved_stderr;
   if (handle_redirection(args, &saved_stdin, &saved_stdout, &saved_stderr) !=
@@ -99,4 +135,98 @@ int execute_args(char **args) {
   int result = execute_process(args);
   restore_redirection(saved_stdin, saved_stdout, saved_stderr);
   return result;
+}
+
+int execute_pipeline(pipe_command_t *pipeline) {
+  if (!pipeline || pipeline->num_stages < 2) {
+    return 1;
+  }
+
+  int pipes[pipeline->num_stages - 1][2];
+  pid_t pids[pipeline->num_stages];
+  
+  // Create all pipes
+  for (int i = 0; i < pipeline->num_stages - 1; i++) {
+    if (pipe(pipes[i]) == -1) {
+      perror("mosh: pipe");
+      // Close already created pipes
+      for (int j = 0; j < i; j++) {
+        close(pipes[j][0]);
+        close(pipes[j][1]);
+      }
+      return 1;
+    }
+  }
+
+  // Create all child processes
+  for (int i = 0; i < pipeline->num_stages; i++) {
+    pids[i] = fork();
+    
+    if (pids[i] == 0) {
+      // Child process
+      
+      // First process: redirect stdout to first pipe
+      if (i == 0) {
+        dup2(pipes[0][1], STDOUT_FILENO);
+      }
+      // Last process: redirect stdin from last pipe
+      else if (i == pipeline->num_stages - 1) {
+        dup2(pipes[i - 1][0], STDIN_FILENO);
+      }
+      // Middle processes: redirect stdin from previous pipe, stdout to next pipe
+      else {
+        dup2(pipes[i - 1][0], STDIN_FILENO);
+        dup2(pipes[i][1], STDOUT_FILENO);
+      }
+      
+      // Close all pipe file descriptors
+      for (int j = 0; j < pipeline->num_stages - 1; j++) {
+        close(pipes[j][0]);
+        close(pipes[j][1]);
+      }
+      
+      // Execute the command
+      char **args = pipeline->commands[i];
+      if (args[0] == NULL) {
+        exit(EXIT_FAILURE);
+      }
+      
+      // Check if it's a builtin - if so, we can't use it in a pipe
+      int builtin_result = execute_builtin(args);
+      if (builtin_result != -1) {
+        exit(builtin_result);
+      }
+      
+      execvp(args[0], args);
+      perror("mosh");
+      exit(EXIT_FAILURE);
+    }
+    else if (pids[i] < 0) {
+      perror("mosh: fork");
+      // Close all pipes
+      for (int j = 0; j < pipeline->num_stages - 1; j++) {
+        close(pipes[j][0]);
+        close(pipes[j][1]);
+      }
+      return 1;
+    }
+  }
+
+  // Parent process: close all pipe file descriptors
+  for (int i = 0; i < pipeline->num_stages - 1; i++) {
+    close(pipes[i][0]);
+    close(pipes[i][1]);
+  }
+
+  // Wait for all child processes
+  int status;
+  int last_status = 0;
+  for (int i = 0; i < pipeline->num_stages; i++) {
+    waitpid(pids[i], &status, 0);
+    if (i == pipeline->num_stages - 1) {
+      last_status = WEXITSTATUS(status);
+    }
+  }
+
+  return last_status;
 }
